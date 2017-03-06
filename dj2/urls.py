@@ -31,7 +31,6 @@ urlpatterns = [
 
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api-token-auth/', views.obtain_auth_token),
-
     url(r'register-from-server/', RegisterFromServerView.as_view()),
     url(r'update-from-server/', UpdateFromServerView.as_view()),
     url(r'change-password-from-server/', ChangePasswordFromServerView.as_view()),

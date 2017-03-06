@@ -23,7 +23,6 @@ class RegisterFromServerView(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
-
         # serializer =  RegistrationSerializer(data=request.data)
         data = request.data
         username = data['username']
@@ -44,7 +43,7 @@ class RegisterFromServerView(APIView):
                 # wp_user.user_url = user_url
                 wp_user.display_name = display_name
                 wp_user.save()
-                return Response(data={'status': True}, status=status.HTTP_200_OK)
+                return Response(data={'status': True}, status=status.HTTP_200_OK, content_type='application/json')
         return Response(data={'status': False}, status=status.HTTP_200_OK)
 
         # if serializer.is_valid():
@@ -78,16 +77,19 @@ class UpdateFromServerView(APIView):
     """
     View update the user profile from other server
     """
-    authentication_classes = (TokenAuthentication,)
+    # authentication_classes = (TokenAuthentication,)
     renderer_classes = (JSONRenderer,)
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
-        serializer =  UpdateProfileSerializer(data=request.data)
-        if serializer.is_valid():
-            user = request.user
+        pprint("this seems to be working fine __________")
+        data = request.data
+        username = data['username']
+
+        if User.objects.filter(username=username).exists() and WpUsers.objects.filter(user_login=username).exists():
+            pprint("__________________________serializer is valid")
+            user = User.objects.get(username=username)
             wp_user = WpUsers.objects.get(user_login=user.username)
-            data = serializer.validated_data
             user_email = data.get("user_email", wp_user.user_email)
             wp_user.user_email = user_email
             user.email = user_email
@@ -97,6 +99,33 @@ class UpdateFromServerView(APIView):
             user.save()
             wp_user.save()
             return Response(data={'status': True}, status=status.HTTP_200_OK)
+        return Response(data={'status': True}, status=status.HTTP_400_BAD_REQUEST)
+
+# class UpdateFromServerView(APIView):
+#     """
+#     View update the user profile from other server
+#     """
+#     authentication_classes = (TokenAuthentication,)
+#     renderer_classes = (JSONRenderer,)
+#     permission_classes = (permissions.IsAuthenticated,)
+#
+#     def post(self, request):
+#         serializer =  UpdateProfileSerializer(data=request.data)
+#         if serializer.is_valid():
+#             user = request.user
+#             wp_user = WpUsers.objects.get(user_login=user.username)
+#             data = serializer.validated_data
+#             user_email = data.get("user_email", wp_user.user_email)
+#             wp_user.user_email = user_email
+#             user.email = user_email
+#             wp_user.user_nicename = data.get('user_nicename', wp_user.user_nicename)
+#             wp_user.display_name = data.get('display_name', wp_user.display_name)
+#             wp_user.user_url = data.get('user_url', wp_user.user_url)
+#             user.save()
+#             wp_user.save()
+#             return Response(data={'status': True}, status=status.HTTP_200_OK)
+
+
 
 class ChangePasswordFromServerView(APIView):
     """
