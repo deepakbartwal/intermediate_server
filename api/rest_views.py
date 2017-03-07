@@ -27,6 +27,7 @@ class RegisterFromServerView(APIView):
         data = request.data
         username = data['username']
         user_email = data['email']
+        pprint("____________________register called _____________________________")
         if not (WpUsers.objects.filter(user_login=username).exists() and WpUsers.objects.filter(user_email = user_email)):
             if not (User.objects.filter(username=username).exists() and User.objects.filter(email = user_email)):
                 password = data['password']
@@ -44,7 +45,7 @@ class RegisterFromServerView(APIView):
                 wp_user.display_name = display_name
                 wp_user.save()
                 return Response(data={'status': True}, status=status.HTTP_200_OK, content_type='application/json')
-        return Response(data={'status': False}, status=status.HTTP_200_OK)
+        return Response(data={'status': False}, status=status.HTTP_400_BAD_REQUEST)
 
         # if serializer.is_valid():
         #     data = serializer.validated_data
@@ -82,12 +83,11 @@ class UpdateFromServerView(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
-        pprint("this seems to be working fine __________")
         data = request.data
         username = data['username']
 
         if User.objects.filter(username=username).exists() and WpUsers.objects.filter(user_login=username).exists():
-            pprint("__________________________serializer is valid")
+            pprint("this is fine ____________--")
             user = User.objects.get(username=username)
             wp_user = WpUsers.objects.get(user_login=user.username)
             user_email = data.get("user_email", wp_user.user_email)
@@ -99,7 +99,7 @@ class UpdateFromServerView(APIView):
             user.save()
             wp_user.save()
             return Response(data={'status': True}, status=status.HTTP_200_OK)
-        return Response(data={'status': True}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(data={'status': False}, status=status.HTTP_400_BAD_REQUEST)
 
 # class UpdateFromServerView(APIView):
 #     """
@@ -131,18 +131,24 @@ class ChangePasswordFromServerView(APIView):
     """
     View to change the user password from other server
     """
-    authentication_classes = (TokenAuthentication,)
+    # authentication_classes = (TokenAuthentication,)
     renderer_classes = (JSONRenderer,)
-    permission_classes = (permissions.IsAuthenticated,)
-
+    permission_classes = (permissions.AllowAny,)
     def post(self, request):
-        user = User.objects.get(username=request.user.username)
+        username = request.data['username']
         old_password = request.data['old_password']
         new_password = request.data['new_password']
-        confirm_new_password = request.data['confirm_new_password']
-        if new_password == old_password:
-            return Response(data={'status': False}, status=status.HTTP_200_OK)#error
-        else:
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response(data={'status': False}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            wp_user = WpUsers.objects.get(user_login=user.username)
+        except WpUsers.DoesNotExist:
+            return Response(data={'status': False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        if not (new_password == old_password):
             DatabasePassword = request.user.password
             from django.contrib.auth.hashers import check_password
             chk = check_password(password=old_password, encoded = DatabasePassword)
@@ -152,8 +158,8 @@ class ChangePasswordFromServerView(APIView):
                 wp_user = WpUsers.objects.get(user_login=user.username)
                 wp_user.user_pass = user.password[7:]
                 wp_user.save()
-                return Response(data={'status': True}, status=status.HTTP_200_OK)
-        return Response(data={'status': False}, status=status.HTTP_200_OK)
+                return Response(data={'status': True}, status=status.HTTP_202_ACCEPTED)
+        return Response(data={'status': False}, status=status.HTTP_304_NOT_MODIFIED)
 
 class ChangeUsernameFromServerView(APIView):
     """
@@ -168,7 +174,7 @@ class ChangeUsernameFromServerView(APIView):
         old_username = user.username
         new_username = request.data['new_username']
         if new_username == old_username:
-            return Response(data={'status': False}, status=status.HTTP_200_OK)#error
+            return Response(data={'status': False}, status=status.HTTP_304_NOT_MODIFIED)
         else:
             user.username = new_username
             wp_user = WpUsers.objects.get(user_login=old_username)
@@ -176,7 +182,6 @@ class ChangeUsernameFromServerView(APIView):
             user.save()
             wp_user.save()
             return Response(data={'status': True}, status=status.HTTP_200_OK)
-        return Response(data={'status': False}, status=status.HTTP_200_OK)
 
 class LoginFromServerView(APIView):
     """
