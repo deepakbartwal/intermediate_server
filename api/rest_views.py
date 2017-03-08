@@ -12,7 +12,7 @@ from rest_framework import permissions
 from django.contrib.auth.models import User
 from wordpress.models import WpUsers
 from .serializers import *
-from pprint import pprint
+# from pprint import pprint
 
 class RegisterFromServerView(APIView):
     """
@@ -27,14 +27,13 @@ class RegisterFromServerView(APIView):
         data = request.data
         username = data['username']
         user_email = data['email']
-        pprint("____________________register called _____________________________")
-        if not (WpUsers.objects.filter(user_login=username).exists() and WpUsers.objects.filter(user_email = user_email)):
-            if not (User.objects.filter(username=username).exists() and User.objects.filter(email = user_email)):
+        if not (WpUsers.objects.filter(user_login=username).exists() or WpUsers.objects.filter(user_email = user_email).exists()):
+            if not (User.objects.filter(username=username).exists() or User.objects.filter(email = user_email).exists()):
                 password = data['password']
                 #No confirm password is being provied, so not password checks
-                user_nicename = data.get('name', None)
-                # user_url = data.get('user_url', None)
-                display_name = data.get('name', None)
+                user_nicename = data['user_nicename']
+                user_url = data.get('user_url', None)
+                display_name = data.get('display_name', None)
                 user = User.objects.create_user(username = username, email = user_email, password = password)
                 wp_user = WpUsers()
                 wp_user.user_login = username
@@ -47,33 +46,6 @@ class RegisterFromServerView(APIView):
                 return Response(data={'status': True}, status=status.HTTP_200_OK, content_type='application/json')
         return Response(data={'status': False}, status=status.HTTP_400_BAD_REQUEST)
 
-        # if serializer.is_valid():
-        #     data = serializer.validated_data
-        #     username = data['username']
-        #     user_email = data['user_email']
-        #     if not (WpUsers.objects.filter(user_login=username).exists() and WpUsers.objects.filter(user_email = user_email)):
-        #         if not (User.objects.filter(username=username).exists() and User.objects.filter(email = user_email)):
-        #             password = data['password']
-        #             confirm_password = data['confirm_password']
-        #             if password == confirm_password:
-        #
-        #                 user_nicename = data.get('user_nicename', None)
-        #                 user_url = data.get('user_url', None)
-        #                 display_name = data.get('display_name', None)
-        #
-        #                 user = User.objects.create_user(username = username, email = user_email, password = password)
-        #
-        #                 wp_user = WpUsers()
-        #                 wp_user.user_login = username
-        #                 wp_user.user_pass = user.password[7:]
-        #                 wp_user.user_nicename = user_nicename
-        #                 wp_user.user_email = user_email
-        #                 wp_user.user_url = user_url
-        #                 wp_user.display_name = display_name
-        #                 wp_user.save()
-        #                 return Response(data={'status': True}, status=status.HTTP_200_OK)
-        # return Response(data={'status': False}, status=status.HTTP_200_OK)
-
 class UpdateFromServerView(APIView):
     """
     View update the user profile from other server
@@ -85,9 +57,7 @@ class UpdateFromServerView(APIView):
     def post(self, request):
         data = request.data
         username = data['username']
-
         if User.objects.filter(username=username).exists() and WpUsers.objects.filter(user_login=username).exists():
-            pprint("this is fine ____________--")
             user = User.objects.get(username=username)
             wp_user = WpUsers.objects.get(user_login=user.username)
             user_email = data.get("user_email", wp_user.user_email)
@@ -100,6 +70,32 @@ class UpdateFromServerView(APIView):
             wp_user.save()
             return Response(data={'status': True}, status=status.HTTP_200_OK)
         return Response(data={'status': False}, status=status.HTTP_400_BAD_REQUEST)
+
+# class UpdateFromServerView(APIView):
+#     """
+#     View update the user profile from other server
+#     """
+#     # authentication_classes = (TokenAuthentication,)
+#     renderer_classes = (JSONRenderer,)
+#     permission_classes = (permissions.AllowAny,)
+#
+#     def post(self, request):
+#         data = request.data
+#         username = data['username']
+#         if User.objects.filter(username=username).exists() and WpUsers.objects.filter(user_login=username).exists():
+#             pprint("this is fine ____________--")
+#             user = User.objects.get(username=username)
+#             wp_user = WpUsers.objects.get(user_login=user.username)
+#             user_email = data.get("user_email", wp_user.user_email)
+#             wp_user.user_email = user_email
+#             user.email = user_email
+#             wp_user.user_nicename = data.get('user_nicename', wp_user.user_nicename)
+#             wp_user.display_name = data.get('display_name', wp_user.display_name)
+#             wp_user.user_url = data.get('user_url', wp_user.user_url)
+#             user.save()
+#             wp_user.save()
+#             return Response(data={'status': True}, status=status.HTTP_200_OK)
+#         return Response(data={'status': False}, status=status.HTTP_400_BAD_REQUEST)
 
 # class UpdateFromServerView(APIView):
 #     """
