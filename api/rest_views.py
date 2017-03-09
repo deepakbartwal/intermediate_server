@@ -134,6 +134,7 @@ class ChangePasswordFromServerView(APIView):
         username = request.data['username']
         old_password = request.data['old_password']
         new_password = request.data['new_password']
+
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
@@ -145,7 +146,7 @@ class ChangePasswordFromServerView(APIView):
             return Response(data={'status': False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         if not (new_password == old_password):
-            DatabasePassword = request.user.password
+            DatabasePassword = user.password
             from django.contrib.auth.hashers import check_password
             chk = check_password(password=old_password, encoded = DatabasePassword)
             if chk == True:
