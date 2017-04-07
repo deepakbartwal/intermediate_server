@@ -104,6 +104,34 @@ class ChangePasswordFromServerView(APIView):
                 return Response(data={'status': True}, status=status.HTTP_202_ACCEPTED)
         return Response(data={'status': False}, status=status.HTTP_304_NOT_MODIFIED)
 
+class UpdateUserInfoView(APIView):
+    """
+    View to change the user password from other server
+    """
+    # authentication_classes = (TokenAuthentication,)
+    renderer_classes = (JSONRenderer,)
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        data = request.data
+        update = data['update']
+        username = data['username']
+        if User.objects.filter(username=username).exists() and WpUsers.objects.filter(user_login=username).exists():
+            user = User.objects.get(username=username)
+            wp_user = WpUsers.objects.get(user_login=user.username)
+            if "name" in update:
+                wp_user.user_nicename = update['name']
+                wp_user.display_name = update['name']
+                wp_user.save()
+                return Response(data={'status': True}, status=status.HTTP_200_OK)
+            # user_email = data.get("user_email", wp_user.user_email)
+            # wp_user.user_email = user_email
+            # user.email = user_email
+            # wp_user.user_url = data.get('user_url', wp_user.user_url)
+            # user.save()
+            # wp_user.save()
+        return Response(data={'status': False}, status=status.HTTP_400_BAD_REQUEST)
+
 # class ChangeUsernameFromServerView(APIView):
 #     """
 #     View to change the username from other server
