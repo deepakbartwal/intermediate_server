@@ -106,7 +106,7 @@ class ChangePasswordFromServerView(APIView):
 
 class UpdateUserInfoView(APIView):
     """
-    View to change the user password from other server
+    View to update user info from other server
     """
     # authentication_classes = (TokenAuthentication,)
     renderer_classes = (JSONRenderer,)
@@ -130,6 +130,28 @@ class UpdateUserInfoView(APIView):
             # wp_user.user_url = data.get('user_url', wp_user.user_url)
             # user.save()
             # wp_user.save()
+        return Response(data={'status': False}, status=status.HTTP_400_BAD_REQUEST)
+
+class ChangeEmailView(APIView):
+    """
+    View to change the user email from other server
+    """
+    # authentication_classes = (TokenAuthentication,)
+    renderer_classes = (JSONRenderer,)
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        data = request.data
+        username = data['username']
+        new_user_email = data['email']
+        if User.objects.filter(username=username).exists() and WpUsers.objects.filter(user_login=username).exists():
+            user = User.objects.get(username=username)
+            wp_user = WpUsers.objects.get(user_login=user.username)
+            wp_user.user_email = new_user_email
+            user.email == new_user_email
+            user.save()
+            wp_user.save()
+            return Response(data={'status': True}, status=status.HTTP_200_OK)
         return Response(data={'status': False}, status=status.HTTP_400_BAD_REQUEST)
 
 # class ChangeUsernameFromServerView(APIView):

@@ -29,6 +29,7 @@ urlpatterns = [
     url(r'update-from-server/', UpdateFromServerView.as_view()),
     url(r'change-password-from-server/', ChangePasswordFromServerView.as_view()),
     url(r'update-user-info/', UpdateUserInfoView.as_view()),
+    url(r'change_email/', ChangeEmailView.as_view()),
     # url(r'change-username-from-server/', ChangeUsernameFromServerView.as_view()),
     # url(r'^api', include('api.rest_urls')),
 ]
