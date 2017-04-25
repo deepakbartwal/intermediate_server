@@ -47,7 +47,7 @@ class UpdateFromServerView(APIView):
     """
     View update the user profile from other server
     """
-    authentication_classes = (TokenAuthentication,)
+    # authentication_classes = (TokenAuthentication,)
     renderer_classes = (JSONRenderer,)
     permission_classes = (permissions.AllowAny,)
 
